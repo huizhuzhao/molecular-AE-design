@@ -1,1 +1,1 @@
-python preprocess.py data/train_toy.txt model.h5 --infile2 data/test_toy.txt --infile3 data/validation_toy.txt
+python preprocess.py data/train_toy.txt data/processed.h5 --infile2 data/test_toy.txt --infile3 data/validation_toy.txt
