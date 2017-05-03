@@ -6,6 +6,7 @@ import h5py
 import numpy as np
 
 from molecules.model import MoleculeAE
+from molecules.utils import load_dataset
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 
 NUM_EPOCHS = 1
@@ -15,8 +16,8 @@ RANDOM_SEED = 1337
 
 def get_arguments():
 	parser = argparse.ArgumentParser(description='Molecular autoencoder')
-	parser.add_argument('data', type=str, help='The txt file containing \
-		preprocessed data.')
+	parser.add_argument('data', type=str, help='The HDF5 file containing \
+		preprocessed data used for training.')
 	parser.add_argument('model', type=str, help = 'Where to save the trained \
 		model. If this file exists, it will be opened and resumed.')
 	parser.add_argument('--epochs', type=int, metavar='N', default=NUM_EPOCHS,
@@ -34,6 +35,8 @@ def main():
 	np.random.seed(args.random_seed)
 
 	data_train, data_test, charset = load_dataset(args.data)
+	print("Length of charset")
+	print(len(charset))
 	model = MoleculeAE()
 	if os.path.isfile(args.model):
 		model.load(charset, args.model, latent_rep_size=args.latent_dim)
