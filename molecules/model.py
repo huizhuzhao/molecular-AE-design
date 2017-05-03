@@ -8,7 +8,7 @@ from keras.layers.recurrent import GRU
 from keras.layers.convolutional import Convolution1D
 
 LATENT_REP = 56
-MAX_LENGTH = 187
+MAX_LENGTH = 188
 
 class MoleculeAE():
 	autoencoder = None
@@ -17,15 +17,15 @@ class MoleculeAE():
 		latent_rep_size=LATENT_REP, weights_file=None):
 		charset_length = len(charset)
 		inp = Input(shape=(max_length, charset_length))
-		ae_loss, latent = self._buildEncoder()
-		outp = self._buildDecoder(latent, latent_rep_size, max_length)
+		ae_loss, latent = self._buildEncoder(inp, latent_rep_size, max_length)
+		outp = self._buildDecoder(latent, latent_rep_size, max_length, charset_length)
 		self.autoencoder = Model(inp, outp)
 
 		if weights_file:
 			self.autoencoder.load_weights(weights_file)
 
 		self.autoencoder.compile(optimizer='Adam',
-			loss='ae_loss',
+			loss=ae_loss,
 			metrics=['accuracy'])
 
 	def _buildEncoder(self, inp, latent_rep_size,
@@ -45,9 +45,9 @@ class MoleculeAE():
 
 		return(ae_loss, latent)
 
-	def _buildDecoder(self, latent, latent_rep_size, max_length):
-		h = Dense(latent_rep_size, name='latent_input', activation='relu')(latent)
-		h = RepeatVector(max_length, name='repeat_vector')(h)
+	def _buildDecoder(self, latent, latent_rep_size, max_length, charset_length):
+		#h = Dense(latent_rep_size, name='latent_input', activation='relu')(latent)
+		h = RepeatVector(max_length, name='repeat_vector')(latent)
 		h = GRU(501, return_sequences=True, name='gru_1')(h)
 		h = GRU(501, return_sequences=True, name='gru_2')(h)
 		h = GRU(501, return_sequences=True, name='gru_3')(h)
