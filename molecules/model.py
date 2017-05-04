@@ -58,6 +58,6 @@ class MoleculeAE():
 		self.autoencoder.save_weights(filename)
 
 	def load(self, charset, weights_file, latent_rep_size = LATENT_REP):
-		self.create(self, charset, weights_file = weights_file, 
+		self.create(charset, weights_file = weights_file, 
 			latent_rep_size = latent_rep_size)
 

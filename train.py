@@ -8,11 +8,34 @@ import numpy as np
 from molecules.model import MoleculeAE
 from molecules.utils import load_dataset
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from keras.callbacks import Callback
 
 NUM_EPOCHS = 1
 BATCH_SIZE = 600
 LATENT_DIM = 56
 RANDOM_SEED = 1337
+LOGFILE = "logfile.txt"
+
+class LogHistory(Callback):
+	def on_epoch_begin(self, epoch, logs={}):
+		logfile = open(LOGFILE, "a")
+		logfile.write("At the beginning of epoch %d:\r\n" % epoch)
+		logfile.close()
+
+	def on_batch_end(self, batch, logs={}):
+		loss = logs.get('loss')
+		accuracy = logs.get('acc')
+		logfile = open(LOGFILE, "a")
+		logfile.write("batch: {:d} loss: {:f} acc: {:f} \r\n".format(
+			batch, loss, accuracy))
+		logfile.close()
+	def on_epoch_end(self, epoch, logs={}):
+		val_loss = logs.get('val_loss')
+		val_accuracy = logs.get('val_acc')
+		logfile = open(LOGFILE, "a")
+		logfile.write("val_loss: {:f} val_acc: {:f} \r\n".format(
+			val_loss, val_accuracy))
+		logfile.close()
 
 def get_arguments():
 	parser = argparse.ArgumentParser(description='Molecular autoencoder')
@@ -35,6 +58,8 @@ def main():
 	np.random.seed(args.random_seed)
 
 	data_train, data_test, charset = load_dataset(args.data)
+	print(type(data_train))
+	print(data_train.shape)
 	print("Length of charset")
 	print(len(charset))
 	model = MoleculeAE()
@@ -48,10 +73,25 @@ def main():
 	reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
 		patience=3, min_lr=0.0001)
 
+	
+	if not os.path.isfile(LOGFILE):
+		logfile = open(LOGFILE, "w+")
+		logfile.close()
+
+	history = LogHistory()
+
+	model.autoencoder.fit(data_train, data_train, shuffle=True, nb_epoch=args.epochs,
+		batch_size=args.batch_size, callbacks=[checkpointer, reduce_lr, history],
+		validation_data=(data_test, data_test))
+	
+
 	model.autoencoder.fit(data_train, data_train, shuffle=True, nb_epoch=args.epochs,
 		batch_size=args.batch_size, callbacks=[checkpointer, reduce_lr],
-		validation_data=(data_test, data_test))
+		validation_data=(data_test, data_test))	
 
+	logfile = open(LOGFILE, "a")
+	logfile.write("Finished the fitting process.")
+	logfile.close()	
 
 
 if __name__ == '__main__':
