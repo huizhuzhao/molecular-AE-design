@@ -29,12 +29,17 @@ class LogHistory(Callback):
 		logfile.write("batch: {:d} loss: {:f} acc: {:f} \r\n".format(
 			batch, loss, accuracy))
 		logfile.close()
+
 	def on_epoch_end(self, epoch, logs={}):
+		loss = logs.get('loss')
+		accuracy = logs.get('acc')
 		val_loss = logs.get('val_loss')
 		val_accuracy = logs.get('val_acc')
 		logfile = open(LOGFILE, "a")
 		logfile.write("val_loss: {:f} val_acc: {:f} \r\n".format(
 			val_loss, val_accuracy))
+		logfile.write("At the end of epoch {:d}: loss: {:f} acc: {:f} \r\n".
+			format(epoch, loss, accuracy))
 		logfile.close()
 
 def get_arguments():
@@ -58,8 +63,6 @@ def main():
 	np.random.seed(args.random_seed)
 
 	data_train, data_test, charset = load_dataset(args.data)
-	print(type(data_train))
-	print(data_train.shape)
 	print("Length of charset")
 	print(len(charset))
 	model = MoleculeAE()
@@ -83,11 +86,6 @@ def main():
 	model.autoencoder.fit(data_train, data_train, shuffle=True, nb_epoch=args.epochs,
 		batch_size=args.batch_size, callbacks=[checkpointer, reduce_lr, history],
 		validation_data=(data_test, data_test))
-	
-
-	model.autoencoder.fit(data_train, data_train, shuffle=True, nb_epoch=args.epochs,
-		batch_size=args.batch_size, callbacks=[checkpointer, reduce_lr],
-		validation_data=(data_test, data_test))	
 
 	logfile = open(LOGFILE, "a")
 	logfile.write("Finished the fitting process.")
